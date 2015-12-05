@@ -1,0 +1,50 @@
+Running instructions in README; basically same as p9.
+
+Describe your implementation:
+------
+ Used a cache to store conditional jumps.
+ A direct mapped cache is used to store instructions.
+ A fully associative cache is used to store loads.
+ A reorder buffer used for in-program order commits.
+ Two regs are used to track the head and tail of the buffer.
+ Reservations stations, 0-3 for load/ldr, 4-7 for fxu, 8-10 for jeq, 11 for halt. None needed for jump as it is done during fetch.
+ 
+Fetch fetches 2 instr before dispatching.
+Dispatch checks for dependencies between the first and 2nd instr and then checks for available rs's.
+When adding to rs, each instr is also added to the ROB.
+
+Executing is done like before. Instead of broadcasting immediately, the resulting data is stored into the ROB entry instead.
+
+Broadcasting is done through ROB. If the head of the ROB is finished, the value is then broadcasted. Should it be jeq, if prediction was incorrect, the IB, ROB, RS, temporary regs are all flushed with the head and tail pointers for ROB resetted.
+Stalls are also resetted and pc is changed to the new pc.
+
+On conditional jumps, no actual prediction is done for now. Instead, it is just assumed that the jump failed. ROB flushes everything otherwise.
+
+For the current completely working version(9), no branch prediction is done. Also, jump cache is taken out as fetch takes care of unconditional jumps.
+For the current most complete version(12), everything is implemented...but test 7 fails.
+
+What worked?
+------
+Dispatching 2 instructions works w/o conditional jump branch prediction.
+
+Dispatching 1 or 2 instruction w/ branch prediction works as long as there is no loading involved it seems.
+
+
+What didn't work?
+------
+Conditional jump branch prediction doesn't work. Since only test 7 fails, I assume it has something to do with it not flushing correctly after an incorrectly predicted jeq is broadcast.
+The program order in which everything is done seems to be correct as test 7 finishes. However, Reg 2 was updated one time too many and reg 3 failed to be updated at all.
+Something probably incorrectly flushed the source for regs and/or didn't flush reservation stations correctly.
+
+
+
+What did you learn?
+------
+This would be easier in systemverilog...and using notepad isn't the best idea. Spacing errors and forgotten end's and begin's are hard to find. Debugging in verilog is a pain. 
+
+Creating a queue like structures is a bit strange since fields inbetween cannot be removed and it cannot be expanded. 
+I wanted be able to select from a larger amount of instructions to execute. However, I don't really know efficent ways to compare the instrs.
+
+The huge chunk of code that was copy pasted for 1st instruction and 2nd instruction dispatchment can probably be lessened.
+
+

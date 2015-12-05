@@ -1,0 +1,4 @@
+To run: same as commands for p9
+make test or makee test(1-f)
+
+To see how the other versions of the code performs/fails, replace cpu.v with p9-(0-9).v and rename to cpu.v

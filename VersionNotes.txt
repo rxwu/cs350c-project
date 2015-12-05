@@ -1,0 +1,41 @@
+Version # 		State			Description
+0				Works			original p9 code
+1 				Fail			completely rewritten w/ 2 instr dispatch & branch prediction
+2				Fail			original w/ ROB
+3				Fail			V1 w/ 2 instr dispatch removed
+4 				Fail			similar to V2
+5				Fail			V0 w/ ROB, branch prediction
+6				Fail			Similar to V5; test 2, 6, 7 not passing
+7 				Fail			Similar to V6
+8				Fail			V7 with 2 instr dispatch added; test 2, 5, 7 not passing
+9				Works			2 instr dispatch & commit w/o branch prediction; stalls on jeq
+10 				Fail			2 instr dispatch w/ branch prediction; test 2, 7 not passing
+11				Fail 			2 instr dispatch w/ branch prediction; test 7 not passing
+12				Fail 			2 instr dispatch & commit w/ branch prediction; test 7 not passing
+
+*changed the commit portion to while loop in v9. Still works.
+
+Version Notes while programming
+------
+Version 0 only have the conditional jump cache. State S0 was removed in favor of just having F2 function as the dispatch state.
+Version 1 doesn't work. This was almost completely rewritten from scratch since Version 0 lacked the capability of dispatching multiple instructions.
+ There's a bug involving failure to record edits to ROB arrays when executing. Edits that took place in the fxu doesn't stay recorded for some reason.
+Version 2 is an attempt to build on top of version 0. Since version 1 doesn't work, I tried adding in the ROB and supporting details in pieces. So far mov, jump, and halt works.
+Version 3 doesn't work. Is basically same as Version 1 without supporting multiple dispatch per cycle. Doesn't work and shows the same bug as version 1. Seems like the multiple dispatch portion wasn't the issue.
+Version 4 is building on version 2. Since version 2 and 3 has basically the same code for mov except for the dispatch area, I assume that this is where the issue is.
+Version 5 is building on version 0. Finally fixed initial issue with p9. Only 1 instr is dispatched at a time. A location for branch prediction has been set; just need to add in the actual implementation. 
+ Currently, it assumes all conditional jumps fail and flush when appropiate.
+ Everything works outside of jeq w/ branch prediction. Current bug seems to involve having a loaded value written to a reg after jump. It seems that instead of broadcasting to the reg, it instead broadcasts only to other rs stations.
+Version 6 is building on version 5. Nothing was added. Still debugging current codes. Ldr seems to fail to write to reg after jeq. Failing tests 2, 6, 7. 
+ Just realized that the issue lies with that fact that reg src is changed with conditional jump. If a jump prediction failed, the original reg source disappears. Adding a set of temp regs.
+Version 7 is building on version 6. Separate rs's are added for halt and jeq. Allocating free rs's is changed to make it easier to add in the dispatching 2 instrs part.
+ Just adding in temp regs doesn't help as there could be multiple conditional jumps. 
+ Seems like temp regs didn't do anything. The issue might be somewhere else then. Or temp regs wasn't used properly.
+ Test 2, 6, 7 still fails. Giving up on that finding that issue for now. It is strange how the intructions are executed in the correct order but ldr fails to write to reg. Need to find what changed reg source or ldr rs fields later.
+Version 8 is building on version 7. Added in dispatching 2 instrs. Failing more tests now. Seems that jeq just doesn't work at all anymore. Unconditional jumps are handled completely in fetch.
+Version 9 is simplifying version 8. Took out conditional jump branch prediction. Pass tests now.
+ Just realized that there's absolutely no need for the temp regs.
+Version 10 is 2 instr dispatch w/ branch prediction. Took out temp regs completely. Failing tests 2, 7. Realized that I forgot to flush reg being busy or not. 
+Version 11 is just version10 but cleaned up. Only test 7 fails. 
+Version 12 is with a while loop for commit. I forgot to change the if to while for commit so that there could be multiple commits per cycle. 
+ Tests 7 fails. However, they seem to run in the correct program order. Test 7 seems to have something extra stored instead.

@@ -1,0 +1,9 @@
+
+Option 1 from piazza
+
+ improve in p9 to implement an out-of-order processor that can achieve a IPC > 1. It must have:
+ 
+    * a branch predictor (reuse from old assignment)
+    * can dispatch/commit more than one instruction per cycle (2 is good)
+    * continue to use our strange 2-ported memory with superbly unexplained fast fetching
+ 
